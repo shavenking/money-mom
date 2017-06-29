@@ -17,6 +17,10 @@ class TransactionTypeGuesser
             return $this->factory->getIncome();
         }
 
+        if (false !== mb_strpos($text, '支出')) {
+            return $this->factory->getExpense();
+        }
+
         throw new \Exception;
     }
 }

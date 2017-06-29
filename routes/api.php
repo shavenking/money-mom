@@ -22,10 +22,10 @@ Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $reque
         abort(400);
     }
 
-    /** @var \App\TransactionType $income */
-    $income = app(\App\TransactionTypeGuesser::class)->guess($request->input('message.text'));
+    /** @var \App\TransactionType $transactionType */
+    $transactionType = app(\App\TransactionTypeGuesser::class)->guess($request->input('message.text'));
 
-    $income->transactions()->create([
+    $transactionType->transactions()->create([
         'user_id' => $request->input('message.from.id'),
         'amount' => $matches[0],
         'balance' => $matches[0],
