@@ -18,6 +18,19 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $request) {
+    $platformUserId = $request->input('message.from.id');
+
+    /** @var \App\Platform $telegram */
+    $telegram = app(\App\PlatformFactory::class)->getTelegram();
+
+    if ($telegram->hasNoUser($platformUserId)) {
+        $telegram->users()->create([
+            'name' => "TG-$platformUserId",
+            'email' => "EMAIL-$platformUserId",
+            'password' => ''
+        ], ['platform_user_id' => $platformUserId]);
+    }
+
     $matches = [];
 
     if (!mb_ereg('[0-9]+', $request->input('message.text'), $matches)) {
