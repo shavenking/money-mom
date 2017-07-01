@@ -19,11 +19,13 @@ Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $reque
     $telegram = app(\App\PlatformFactory::class)->getTelegram();
 
     if ($telegram->hasNoUser($platformUserId)) {
-        $telegram->users()->create([
+        $user = $telegram->users()->create([
             'name' => "TG-$platformUserId",
             'email' => "EMAIL-$platformUserId",
             'password' => ''
         ], ['platform_user_id' => $platformUserId]);
+    } else {
+        $user = $telegram->usersByPlatformUserId($platformUserId)->firstOrFail();
     }
 
     $matches = [];
@@ -36,7 +38,7 @@ Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $reque
     $transactionType = app(\App\TransactionTypeGuesser::class)->guess($request->input('message.text'));
 
     $transactionType->transactions()->create([
-        'user_id' => $request->input('message.from.id'),
+        'user_id' => $user->id,
         'amount' => $matches[0],
         'balance' => $matches[0],
         'created_at' => $request->input('message.date'),
