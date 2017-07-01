@@ -3,6 +3,16 @@
 use Illuminate\Http\Request;
 
 Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $request) {
+    $validator = Validator::make($request->all(), [
+        'message.text' => 'required',
+        'message.date' => 'required',
+        'message.from.id' => 'required'
+    ]);
+
+    if ($validator->fails()) {
+        abort(400);
+    }
+
     $platformUserId = $request->input('message.from.id');
 
     /** @var \App\Platform $telegram */
