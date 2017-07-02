@@ -19,7 +19,7 @@ class ExpenseTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487 支出'])
+            'message' => $telegramFactory->makeMessage(['text' => '9487.56 支出'])
         ]);
 
         $this
@@ -39,8 +39,8 @@ class ExpenseTest extends TestCase
             [
                 'user_id' => $user->id,
                 'transaction_type_id' => $expense->id,
-                'amount' => '9487.00',
-                'balance' => '9487.00',
+                'amount' => '9487.56',
+                'balance' => '9487.56',
                 'created_at' => $messageDate,
                 'updated_at' => $messageDate,
             ]
@@ -52,7 +52,7 @@ class ExpenseTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487 支出'])
+            'message' => $telegramFactory->makeMessage(['text' => '9487.56 支出'])
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');
@@ -74,8 +74,8 @@ class ExpenseTest extends TestCase
             [
                 'user_id' => $user->id,
                 'transaction_type_id' => $expense->id,
-                'amount' => '9487.00',
-                'balance' => '9487.00',
+                'amount' => '9487.56',
+                'balance' => '9487.56',
                 'created_at' => $messageDate,
                 'updated_at' => $messageDate,
             ]

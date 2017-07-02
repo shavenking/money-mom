@@ -2,23 +2,38 @@
 
 namespace App;
 
+use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
+
 class TransactionTypeGuesser
 {
     protected $factory;
 
-    public function __construct(TransactionTypeFactory $factory)
+    protected $processor;
+
+    public function __construct(TransactionTypeFactory $factory, NaturalLanguageProcessor $processor)
     {
         $this->factory = $factory;
+        $this->processor = $processor;
     }
 
     public function guess(string $text): TransactionType
     {
-        if (false !== mb_strpos($text, '收入')) {
-            return $this->factory->getIncome();
-        }
+        $tokens = $this->processor->getTokens($text);
 
-        if (false !== mb_strpos($text, '支出')) {
-            return $this->factory->getExpense();
+        foreach ($tokens as $token) {
+            if (
+                $token->isNoun()
+                && 0 === strcasecmp('收入', $token->getText())
+            ) {
+                return $this->factory->getIncome();
+            }
+
+            if (
+                $token->isNoun()
+                && 0 === strcasecmp('支出', $token->getText())
+            ) {
+                return $this->factory->getExpense();
+            }
         }
 
         throw new \Exception;

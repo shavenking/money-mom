@@ -6,6 +6,7 @@ use App\PlatformFactory;
 use App\Transaction;
 use App\TransactionTypeFactory;
 use Carbon\Carbon;
+use Lib\NaturalLanguageProcessor\GoogleNaturalLanguageProcessor;
 use TelegramFactory;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -23,7 +24,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443 收入'])
+            'message' => $telegramFactory->makeMessage(['text' => '38443.12 收入'])
         ]);
 
         $this
@@ -43,8 +44,8 @@ class IncomeTest extends TestCase
             [
                 'user_id' => $user->id,
                 'transaction_type_id' => $income->id,
-                'amount' => '38443.00',
-                'balance' => '38443.00',
+                'amount' => '38443.12',
+                'balance' => '38443.12',
                 'created_at' => $messageDate,
                 'updated_at' => $messageDate,
             ]
@@ -59,7 +60,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443 收入'])
+            'message' => $telegramFactory->makeMessage(['text' => '38443.12 收入'])
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');
@@ -81,8 +82,8 @@ class IncomeTest extends TestCase
             [
                 'user_id' => $user->id,
                 'transaction_type_id' => $income->id,
-                'amount' => '38443.00',
-                'balance' => '38443.00',
+                'amount' => '38443.12',
+                'balance' => '38443.12',
                 'created_at' => $messageDate,
                 'updated_at' => $messageDate,
             ]

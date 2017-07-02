@@ -28,9 +28,19 @@ Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $reque
         $user = $telegram->usersByPlatformUserId($platformUserId)->firstOrFail();
     }
 
-    $matches = [];
+    $tokens = app(\Lib\NaturalLanguageProcessor\NaturalLanguageProcessor::class)
+        ->getTokens($request->input('message.text'));
 
-    if (!mb_ereg('[0-9]+', $request->input('message.text'), $matches)) {
+    $amount = '';
+
+    foreach ($tokens as $token) {
+        if ($token->isNumber()) {
+            $amount = $token->getText();
+            break;
+        }
+    }
+
+    if (empty($amount)) {
         abort(400);
     }
 
@@ -39,8 +49,8 @@ Route::post('webhooks/telegram/' . env('TELEGRAM_KEY'), function (Request $reque
 
     $transactionType->transactions()->create([
         'user_id' => $user->id,
-        'amount' => $matches[0],
-        'balance' => $matches[0],
+        'amount' => $amount,
+        'balance' => $amount,
         'created_at' => $request->input('message.date'),
         'updated_at' => $request->input('message.date')
     ]);
