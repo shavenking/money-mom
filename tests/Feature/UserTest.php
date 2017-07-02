@@ -34,7 +34,7 @@ class UserTest extends TestCase
         $this->assertTrue($telegram->hasNoUser($platformUserId));
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
             ->assertStatus(200);
 
         $this->assertTrue($telegram->hasUser($platformUserId));

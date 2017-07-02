@@ -23,7 +23,7 @@ class ExpenseTest extends TestCase
         ]);
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
             ->assertStatus(200);
 
         $user = app(PlatformFactory::class)
@@ -63,7 +63,7 @@ class ExpenseTest extends TestCase
         ], ['platform_user_id' => $platformUserId]);
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
             ->assertStatus(200);
 
         $expense = app(TransactionTypeFactory::class)->getExpense();

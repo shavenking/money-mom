@@ -28,7 +28,7 @@ class IncomeTest extends TestCase
         ]);
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
             ->assertStatus(200);
 
         $user = app(PlatformFactory::class)
@@ -71,7 +71,7 @@ class IncomeTest extends TestCase
         ], ['platform_user_id' => $platformUserId]);
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
             ->assertStatus(200);
 
         $income = app(TransactionTypeFactory::class)->getIncome();
