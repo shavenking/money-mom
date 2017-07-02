@@ -22,28 +22,28 @@ class WebhookTest extends TestCase
         ]);
 
         $this
-            ->post('/api/webhooks/telegram/' . env('TELEGRAM_KEY'))
-            ->assertStatus(400);
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'))
+            ->assertStatus(422);
 
         $this
-            ->post(
+            ->postJson(
                 '/api/webhooks/telegram/' . env('TELEGRAM_KEY'),
                 array_except($telegramUpdate, 'message.from.id')
             )
-            ->assertStatus(400);
+            ->assertStatus(422);
 
         $this
-            ->post(
+            ->postJson(
                 '/api/webhooks/telegram/' . env('TELEGRAM_KEY'),
                 array_except($telegramUpdate, 'message.date')
             )
-            ->assertStatus(400);
+            ->assertStatus(422);
 
         $this
-            ->post(
+            ->postJson(
                 '/api/webhooks/telegram/' . env('TELEGRAM_KEY'),
                 array_except($telegramUpdate, 'message.text')
             )
-            ->assertStatus(400);
+            ->assertStatus(422);
     }
 }
