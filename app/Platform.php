@@ -18,13 +18,22 @@ class Platform extends Model
         return $this->users()->wherePivot('platform_user_id', $platformUserId);
     }
 
+    public function hasUser($platformUserId)
+    {
+        return $this->usersByPlatformUserId($platformUserId)->exists();
+    }
+
     public function hasNoUser($platformUserId)
     {
         return !$this->hasUser($platformUserId);
     }
 
-    public function hasUser($platformUserId)
+    public function createIfNotExist($platformUserId, $attributes, $joining, $touch = true)
     {
-        return $this->usersByPlatformUserId($platformUserId)->exists();
+        if ($this->hasUser($platformUserId)) {
+            return $this->usersByPlatformUserId($platformUserId)->firstOrFail();
+        }
+
+        return $this->users()->create($attributes, $joining, $touch);
     }
 }

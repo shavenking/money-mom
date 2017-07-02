@@ -44,4 +44,9 @@ class Token
     {
         return $this->meta[$meta];
     }
+
+    public function __toString()
+    {
+        return $this->getText();
+    }
 }

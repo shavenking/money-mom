@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Platform;
 use App\PlatformFactory;
+use App\TransactionAmountGuesser;
 use App\TransactionType;
 use App\TransactionTypeGuesser;
 use Illuminate\Http\Request;
 use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
+use Lib\NaturalLanguageProcessor\Token;
 
 class WebhookController extends Controller
 {
@@ -24,34 +26,19 @@ class WebhookController extends Controller
         /** @var Platform $telegram */
         $telegram = app(PlatformFactory::class)->getTelegram();
 
-        if ($telegram->hasNoUser($platformUserId)) {
-            $user = $telegram->users()->create([
+        $user = $telegram->createIfNotExist(
+            $platformUserId,
+            [
                 'name' => "TG-$platformUserId",
                 'email' => "EMAIL-$platformUserId",
                 'password' => ''
-            ], ['platform_user_id' => $platformUserId]);
-        } else {
-            $user = $telegram->usersByPlatformUserId($platformUserId)->firstOrFail();
-        }
-
-        $tokens = app(NaturalLanguageProcessor::class)
-            ->getTokens($request->input('message.text'));
-
-        $amount = '';
-
-        foreach ($tokens as $token) {
-            if ($token->isNumber()) {
-                $amount = $token->getText();
-                break;
-            }
-        }
-
-        if (empty($amount)) {
-            abort(400);
-        }
+            ],
+            ['platform_user_id' => $platformUserId]
+        );
 
         /** @var TransactionType $transactionType */
         $transactionType = app(TransactionTypeGuesser::class)->guess($request->input('message.text'));
+        $amount = app(TransactionAmountGuesser::class)->guess($request->input('message.text'));
 
         $transactionType->transactions()->create([
             'user_id' => $user->id,
