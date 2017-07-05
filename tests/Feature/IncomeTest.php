@@ -6,7 +6,6 @@ use App\PlatformFactory;
 use App\Transaction;
 use App\TransactionTypeFactory;
 use Carbon\Carbon;
-use Lib\NaturalLanguageProcessor\GoogleNaturalLanguageProcessor;
 use TelegramFactory;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
