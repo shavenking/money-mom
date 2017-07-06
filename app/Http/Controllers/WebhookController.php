@@ -4,17 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Platform;
 use App\PlatformFactory;
+use App\Transaction;
 use App\TransactionAmountGuesser;
 use App\TransactionType;
+use App\TransactionTypeFactory;
 use App\TransactionTypeGuesser;
 use Illuminate\Http\Request;
-use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
-use Lib\NaturalLanguageProcessor\Token;
 
 class WebhookController extends Controller
 {
-    public function telegram(Request $request)
-    {
+    public function telegram(
+        Request $request,
+        PlatformFactory $platformFactory,
+        TransactionTypeGuesser $transactionTypeGuesser,
+        TransactionAmountGuesser $transactionAmountGuesser,
+        Transaction $transaction,
+        TransactionTypeFactory $transactionTypeFactory
+    ) {
         $this->validate($request, [
             'message.text' => 'required',
             'message.date' => 'required',
@@ -24,7 +30,7 @@ class WebhookController extends Controller
         $platformUserId = $request->input('message.from.id');
 
         /** @var Platform $telegram */
-        $telegram = app(PlatformFactory::class)->getTelegram();
+        $telegram = $platformFactory->getTelegram();
 
         $user = $telegram->createIfNotExist(
             $platformUserId,
@@ -37,13 +43,22 @@ class WebhookController extends Controller
         );
 
         /** @var TransactionType $transactionType */
-        $transactionType = app(TransactionTypeGuesser::class)->guess($request->input('message.text'));
-        $amount = app(TransactionAmountGuesser::class)->guess($request->input('message.text'));
+        $transactionType = $transactionTypeGuesser->guess($request->input('message.text'));
+        $latest = $transaction->lockForUpdate()->whereUserId($user->id)->latest()->first(); // todo: use redis instead?
+        $balance = $amount = $transactionAmountGuesser->guess($request->input('message.text'));
+
+        if ($latest && $transactionTypeFactory->isIncome($transactionType)) {
+            $balance = bcadd($latest->balance, $amount, 2);
+        }
+
+        if ($latest && $transactionTypeFactory->isExpense($transactionType)) {
+            $balance = bcsub($latest->balance, $amount, 2);
+        }
 
         $transactionType->transactions()->create([
             'user_id' => $user->id,
             'amount' => $amount,
-            'balance' => $amount,
+            'balance' => $balance,
             'created_at' => $request->input('message.date'),
             'updated_at' => $request->input('message.date')
         ]);

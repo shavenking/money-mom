@@ -49,4 +49,14 @@ class TransactionTypeFactory
             'name' => $this->supportedTypes[$type]
         ]);
     }
+
+    public function isIncome(TransactionType $transactionType)
+    {
+        return $this->supportedTypes['INCOME'] === $transactionType->name;
+    }
+
+    public function isExpense(TransactionType $transactionType)
+    {
+        return $this->supportedTypes['EXPENSE'] === $transactionType->name;
+    }
 }

@@ -88,4 +88,54 @@ class IncomeTest extends TestCase
             ]
         );
     }
+
+    /**
+     * Test balance is calculate correctly
+     */
+    public function testBalanceIsCalculateCorrectly()
+    {
+        $telegramFactory = app(TelegramFactory::class);
+
+        $telegramUpdate = $telegramFactory->makeUpdate([
+            'message' => $telegramFactory->makeMessage(['text' => '9487.56 收入'])
+        ]);
+
+        $platformUserId = array_get($telegramUpdate, 'message.from.id');
+        $user = app(PlatformFactory::class)->getTelegram()->users()->create([
+            'name' => "TG-$platformUserId",
+            'email' => "EMAIL-$platformUserId",
+            'password' => ''
+        ], ['platform_user_id' => $platformUserId]);
+
+        /** @var TransactionType $income */
+        $income = app(TransactionTypeFactory::class)->getIncome();
+
+        /** @var Carbon $messageDate */
+        $messageDate = app(Carbon::class)->createFromTimestamp(array_get($telegramUpdate, 'message.date'));
+
+        $yesterday = $messageDate->copy()->subDay();
+        $income->transactions()->create([
+            'user_id' => $user->id,
+            'amount' => '17.01',
+            'balance' => '17.01',
+            'created_at' => $yesterday,
+            'updated_at' => $yesterday
+        ]);
+
+        $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas(
+            (new Transaction)->getTable(),
+            [
+                'user_id' => $user->id,
+                'transaction_type_id' => $income->id,
+                'amount' => '9487.56',
+                'balance' => bcadd('9487.56', '17.01', 2),
+                'created_at' => $messageDate,
+                'updated_at' => $messageDate
+            ]
+        );
+    }
 }
