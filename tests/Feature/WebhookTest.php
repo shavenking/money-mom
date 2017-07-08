@@ -80,7 +80,7 @@ class WebhookTest extends TestCase
             ->assertJson([
                 'method' => 'sendMessage',
                 'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
-                'reply_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
                 'text' => 'INCOME 38443.00, BALANCE NOW: 38443.00'
             ]);
 
