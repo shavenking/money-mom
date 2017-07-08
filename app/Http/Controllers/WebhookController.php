@@ -71,7 +71,7 @@ class WebhookController extends Controller
         return response()->json([
             'method' => 'sendMessage',
             'chat_id' => $request->input('message.chat.id'),
-            'reply_message_id' => $request->input('message.message_id'),
+            'reply_to_message_id' => $request->input('message.message_id'),
             'text' => $transactionType->name . ' ' . $transaction->amount . ', BALANCE NOW: ' . $transaction->balance
         ]);
     }
