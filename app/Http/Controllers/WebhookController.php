@@ -22,6 +22,8 @@ class WebhookController extends Controller
         TransactionTypeFactory $transactionTypeFactory
     ) {
         $this->validate($request, [
+            'message.chat.id' => 'required',
+            'message.message_id' => 'required',
             'message.text' => 'required',
             'message.date' => 'required',
             'message.from.id' => 'required'
@@ -55,7 +57,8 @@ class WebhookController extends Controller
             $balance = bcsub($latest->balance, $amount, 2);
         }
 
-        $transactionType->transactions()->create([
+        /** @var Transaction $transaction */
+        $transaction = $transactionType->transactions()->create([
             'user_id' => $user->id,
             'amount' => $amount,
             'balance' => $balance,
@@ -63,6 +66,13 @@ class WebhookController extends Controller
             'updated_at' => $request->input('message.date')
         ]);
 
-        return response()->json();
+        $transaction->refresh();
+
+        return response()->json([
+            'method' => 'sendMessage',
+            'chat_id' => $request->input('message.chat.id'),
+            'reply_message_id' => $request->input('message.message_id'),
+            'text' => $transactionType->name . ' ' . $transaction->amount . ', BALANCE NOW: ' . $transaction->balance
+        ]);
     }
 }
