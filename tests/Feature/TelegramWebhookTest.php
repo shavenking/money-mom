@@ -6,14 +6,14 @@ use TelegramFactory;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
-class WebhookTest extends TestCase
+class TelegramWebhookTest extends TestCase
 {
     use DatabaseTransactions;
 
     /**
      * Test Telegram webhook API will validate request
      */
-    public function testTelegramWebhookAPIWillValidateRequest()
+    public function testValidateRequest()
     {
         $telegramFactory = app(TelegramFactory::class);
 
@@ -61,7 +61,7 @@ class WebhookTest extends TestCase
             ->assertStatus(422);
     }
 
-    public function testTelegramWillRespondSendMessageToWebhookUpdate()
+    public function testRespondSendMessageToWebhookUpdate()
     {
         /** @var TelegramFactory $telegramFactory */
         $telegramFactory = app(TelegramFactory::class);
