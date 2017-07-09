@@ -22,7 +22,7 @@ class UserTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443 收入'])
+            'message.text' => '38443 收入'
         ]);
 
         /** @var Platform $telegram */

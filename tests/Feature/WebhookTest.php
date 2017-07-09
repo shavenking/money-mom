@@ -18,7 +18,7 @@ class WebhookTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443 收入'])
+            'message.text' => '38443 收入'
         ]);
 
         $this
@@ -69,10 +69,9 @@ class WebhookTest extends TestCase
         $user = $telegramFactory->makeUser();
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443 收入'])
+            'message.text' => '38443 收入',
+            'message.from' => $user
         ]);
-
-        array_set($telegramUpdate, 'message.from', $user);
 
         $this
             ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
@@ -85,10 +84,9 @@ class WebhookTest extends TestCase
             ]);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '79.12 支出'])
+            'message.text' => '79.12 支出',
+            'message.from' => $user
         ]);
-
-        array_set($telegramUpdate, 'message.from', $user);
 
         $this
             ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)

@@ -20,7 +20,7 @@ class ExpenseTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487.56 支出'])
+            'message.text' => '9487.56 支出'
         ]);
 
         $this
@@ -53,7 +53,7 @@ class ExpenseTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487.56 支出'])
+            'message.text' => '9487.56 支出'
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');
@@ -91,7 +91,7 @@ class ExpenseTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487.56 支出'])
+            'message.text' => '9487.56 支出'
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');

@@ -13,36 +13,53 @@ class TelegramFactory
 
     public function makeUpdate(array $override = []): array
     {
-        return array_merge([
-            'update_id' => $this->faker->randomNumber(),
+        $update = [
+            'updated_id' => $this->faker->randomNumber(),
             'message' => $this->makeMessage()
-        ], $override);
+        ];
+
+        return $this->override($update, $override);
     }
 
     public function makeMessage(array $override = []): array
     {
-        return array_merge([
+        $message = [
             'message_id' => $this->faker->randomNumber(),
             'from' => $this->makeUser(),
             'date' => $this->faker->unixTime,
             'chat' => $this->makeChat(),
             'text' => 'income 30'
-        ], $override);
+        ];
+
+        return $this->override($message, $override);
     }
 
     public function makeUser(array $override = []): array
     {
-        return array_merge([
+        $user = [
             'id' => $this->faker->randomNumber(),
             'first_name' => $this->faker->name
-        ], $override);
+        ];
+
+        return $this->override($user, $override);
     }
 
     public function makeChat(array $override = []): array
     {
-        return array_merge([
+        $chat = [
             'id' => $this->faker->randomNumber(),
             'type' => 'private'
-        ], $override);
+        ];
+
+        return $this->override($chat, $override);
+    }
+
+    protected function override(array $base, array $override = []): array
+    {
+        foreach ($override as $key => $value) {
+            array_set($base, $key, $value);
+        }
+
+        return $base;
     }
 }

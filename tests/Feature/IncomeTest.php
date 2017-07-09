@@ -23,7 +23,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443.12 收入'])
+            'message.text' => '38443.12 收入'
         ]);
 
         $this
@@ -59,7 +59,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '38443.12 收入'])
+            'message.text' => '38443.12 收入'
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');
@@ -97,7 +97,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message' => $telegramFactory->makeMessage(['text' => '9487.56 收入'])
+            'message.text' => '9487.56 收入'
         ]);
 
         $platformUserId = array_get($telegramUpdate, 'message.from.id');
