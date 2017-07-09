@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\PendingMessage;
 use App\Platform;
 use App\PlatformFactory;
 use App\Transaction;
@@ -9,6 +10,7 @@ use App\TransactionAmountGuesser;
 use App\TransactionType;
 use App\TransactionTypeFactory;
 use App\TransactionTypeGuesser;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
 
 class WebhookController extends Controller
@@ -44,10 +46,26 @@ class WebhookController extends Controller
             ['platform_user_id' => $platformUserId]
         );
 
-        /** @var TransactionType $transactionType */
-        $transactionType = $transactionTypeGuesser->guess($request->input('message.text'));
+        try {
+            /** @var TransactionType $transactionType */
+            $transactionType = $transactionTypeGuesser->guess($request->input('message.text'));
+            $balance = $amount = $transactionAmountGuesser->guess($request->input('message.text'));
+        } catch (ClientException $e) {
+            PendingMessage::create([
+                'user_id' => $user->id,
+                'platform_id' => $telegram->id,
+                'content' => json_encode($request->all())
+            ]);
+
+            return response()->json([
+                'method' => 'sendMessage',
+                'chat_id' => $request->input('message.chat.id'),
+                'reply_to_message_id' => $request->input('message.message_id'),
+                'text' => view('message-queued')->render()
+            ]);
+        }
+
         $latest = $transaction->lockForUpdate()->whereUserId($user->id)->latest()->first(); // todo: use redis instead?
-        $balance = $amount = $transactionAmountGuesser->guess($request->input('message.text'));
 
         if ($latest && $transactionTypeFactory->isIncome($transactionType)) {
             $balance = bcadd($latest->balance, $amount, 2);
@@ -68,15 +86,11 @@ class WebhookController extends Controller
 
         $transaction->refresh();
 
-        $response = [
+        return response()->json([
             'method' => 'sendMessage',
             'chat_id' => $request->input('message.chat.id'),
             'reply_to_message_id' => $request->input('message.message_id'),
             'text' => $transactionType->name . ' ' . $transaction->amount . ', BALANCE NOW: ' . $transaction->balance
-        ];
-
-        \Log::info(json_encode($response));
-
-        return response()->json($response);
+        ]);
     }
 }

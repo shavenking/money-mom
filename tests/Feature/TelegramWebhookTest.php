@@ -2,6 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\PendingMessage;
+use App\PlatformFactory;
+use GuzzleHttp\Exception\ClientException;
+use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
+use Mockery;
 use TelegramFactory;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -97,5 +102,40 @@ class TelegramWebhookTest extends TestCase
                 'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
                 'text' => 'EXPENSE 79.12, BALANCE NOW: 38363.88'
             ]);
+    }
+
+    public function testDelayProcessingWhenNLPIsUnavailable()
+    {
+        $telegramUpdate = app(TelegramFactory::class)->makeUpdate();
+
+        $mock = Mockery::mock(NaturalLanguageProcessor::class)
+            ->shouldReceive('getTokens')
+            ->andThrow(Mockery::mock(ClientException::class))
+            ->getMock();
+
+        app()->instance(NaturalLanguageProcessor::class, $mock);
+
+        $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->assertStatus(200)
+            ->assertExactJson([
+                'method' => 'sendMessage',
+                'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'text' => '我們收到您的訊息了，但是目前系統繁忙，我們會盡快處理。' . PHP_EOL
+            ]);
+
+        $user = app(PlatformFactory::class)->getTelegram()->usersByPlatformUserId(
+            array_get($telegramUpdate, 'message.from.id')
+        )->firstOrFail();
+
+        $this->assertDatabaseHas(
+            (new PendingMessage)->getTable(),
+            [
+                'user_id' => $user->id,
+                'platform_id' => app(PlatformFactory::class)->getTelegram()->id,
+                'content' => json_encode($telegramUpdate)
+            ]
+        );
     }
 }
