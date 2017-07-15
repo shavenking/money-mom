@@ -38,6 +38,6 @@ class TransactionTypeGuesser
             }
         }
 
-        throw new \Exception;
+        throw new TransactionTypeNotFound;
     }
 }

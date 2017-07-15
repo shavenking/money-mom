@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Guesser\TransactionTypeNotFound;
 use App\PendingMessage;
 use App\Platform;
 use App\PlatformFactory;
@@ -12,6 +13,7 @@ use App\TransactionTypeFactory;
 use App\Guesser\TransactionTypeGuesser;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
@@ -62,6 +64,15 @@ class WebhookController extends Controller
                 'chat_id' => $request->input('message.chat.id'),
                 'reply_to_message_id' => $request->input('message.message_id'),
                 'text' => view('message-queued')->render()
+            ]);
+        } catch (TransactionTypeNotFound $e) {
+            Log::info(json_encode($request->all()));
+
+            return response()->json([
+                'method' => 'sendMessage',
+                'chat_id' => $request->input('message.chat.id'),
+                'reply_to_message_id' => $request->input('message.message_id'),
+                'text' => view('transaction-type-not-found')->render()
             ]);
         }
 
