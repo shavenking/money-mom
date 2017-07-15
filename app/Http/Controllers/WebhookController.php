@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Guesser\TransactionAmountNotFound;
 use App\Guesser\TransactionTypeNotFound;
 use App\PendingMessage;
 use App\Platform;
@@ -73,6 +74,15 @@ class WebhookController extends Controller
                 'chat_id' => $request->input('message.chat.id'),
                 'reply_to_message_id' => $request->input('message.message_id'),
                 'text' => view('transaction-type-not-found')->render()
+            ]);
+        } catch (TransactionAmountNotFound $e) {
+            Log::info(json_encode($request->all()));
+
+            return response()->json([
+                'method' => 'sendMessage',
+                'chat_id' => $request->input('message.chat.id'),
+                'reply_to_message_id' => $request->input('message.message_id'),
+                'text' => view('transaction-amount-not-found')->render()
             ]);
         }
 

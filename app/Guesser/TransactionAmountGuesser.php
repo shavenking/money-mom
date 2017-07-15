@@ -22,7 +22,7 @@ class TransactionAmountGuesser
         });
 
         if (empty($amount)) {
-            throw new \Exception;
+            throw new TransactionAmountNotFound;
         }
 
         return $amount;

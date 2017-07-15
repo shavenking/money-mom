@@ -8,6 +8,7 @@ use App\Transaction;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Log;
 use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
+use Lib\NaturalLanguageProcessor\Token;
 use Mockery;
 use TelegramFactory;
 use Tests\TestCase;
@@ -167,6 +168,56 @@ class TelegramWebhookTest extends TestCase
                 'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
                 'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
                 'text' => '格式錯誤，請至少輸入「收入」或「支出」。' . PHP_EOL
+            ]);
+
+        Log::shouldHaveReceived('info')
+            ->with(json_encode($telegramUpdate))
+            ->once();
+
+        Log::shouldHaveReceived('info')
+            ->with($response->baseResponse)
+            ->once();
+
+        $user = app(PlatformFactory::class)->getTelegram()->usersByPlatformUserId(
+            array_get($telegramUpdate, 'message.from.id')
+        )->firstOrFail();
+
+        $this->assertDatabaseMissing(
+            (new Transaction)->getTable(),
+            [
+                'user_id' => $user->id
+            ]
+        );
+    }
+
+    public function testWhenMessageHasNoTransactionAmountTokenWillRespondOkAndLogMessage()
+    {
+        /** @var TelegramFactory $telegramFactory */
+        $telegramFactory = app(TelegramFactory::class);
+
+        $telegramUpdate = $telegramFactory->makeUpdate([
+            'message.text' => '收入'
+        ]);
+
+        $mock = Mockery::mock(NaturalLanguageProcessor::class)
+            ->shouldReceive('getTokens')
+            ->andReturn([
+                new Token('收入', 'NOUN', '收入')
+            ])
+            ->getMock();
+
+        app()->instance(NaturalLanguageProcessor::class, $mock);
+
+        Log::spy();
+
+        $response = $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->assertStatus(200)
+            ->assertExactJson([
+                'method' => 'sendMessage',
+                'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'text' => '格式錯誤，請輸入金額。' . PHP_EOL
             ]);
 
         Log::shouldHaveReceived('info')
