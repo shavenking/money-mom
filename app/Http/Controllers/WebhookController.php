@@ -6,10 +6,10 @@ use App\PendingMessage;
 use App\Platform;
 use App\PlatformFactory;
 use App\Transaction;
-use App\TransactionAmountGuesser;
+use App\Guesser\TransactionAmountGuesser;
 use App\TransactionType;
 use App\TransactionTypeFactory;
-use App\TransactionTypeGuesser;
+use App\Guesser\TransactionTypeGuesser;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
 

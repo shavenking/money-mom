@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Guesser;
 
 use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
 

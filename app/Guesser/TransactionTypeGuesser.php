@@ -1,7 +1,9 @@
 <?php
 
-namespace App;
+namespace App\Guesser;
 
+use App\TransactionType;
+use App\TransactionTypeFactory;
 use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
 
 class TransactionTypeGuesser
