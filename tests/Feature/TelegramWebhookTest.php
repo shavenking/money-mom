@@ -23,15 +23,15 @@ class TelegramWebhookTest extends TestCase
      */
     public function testValidateRequest()
     {
+        $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'))
+            ->assertStatus(422);
+
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
             'message.text' => '38443 收入'
         ]);
-
-        $this
-            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'))
-            ->assertStatus(422);
 
         $this
             ->postJson(
@@ -66,7 +66,14 @@ class TelegramWebhookTest extends TestCase
                 '/api/webhooks/telegram/' . env('TELEGRAM_KEY'),
                 array_except($telegramUpdate, 'message.text')
             )
-            ->assertStatus(422);
+            ->assertStatus(200)
+            ->assertExactJson([
+                'method' => 'sendMessage',
+                'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'text' => view('please-input-correct-format')->render()
+            ]);
+
     }
 
     public function testRespondSendMessageToWebhookUpdate()

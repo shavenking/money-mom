@@ -15,6 +15,7 @@ use App\Guesser\TransactionTypeGuesser;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class WebhookController extends Controller
 {
@@ -26,13 +27,29 @@ class WebhookController extends Controller
         Transaction $transaction,
         TransactionTypeFactory $transactionTypeFactory
     ) {
-        $this->validate($request, [
-            'message.chat.id' => 'required',
-            'message.message_id' => 'required',
-            'message.text' => 'required',
-            'message.date' => 'required',
-            'message.from.id' => 'required'
-        ]);
+        try {
+            $this->validate($request, [
+                'message.chat.id' => 'required',
+                'message.message_id' => 'required',
+                'message.text' => 'required',
+                'message.date' => 'required',
+                'message.from.id' => 'required'
+            ]);
+        } catch (ValidationException $e) {
+            if (
+                1 === count($e->validator->failed())
+                && array_has($e->validator->failed(), 'message.text')
+            ) {
+                return response()->json([
+                    'method' => 'sendMessage',
+                    'chat_id' => $request->input('message.chat.id'),
+                    'reply_to_message_id' => $request->input('message.message_id'),
+                    'text' => view('please-input-correct-format')->render()
+                ]);
+            }
+
+            throw $e;
+        }
 
         $platformUserId = $request->input('message.from.id');
 
