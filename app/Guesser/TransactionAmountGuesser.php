@@ -18,7 +18,7 @@ class TransactionAmountGuesser
         $tokens = $this->processor->getTokens($text);
 
         $amount = array_first($tokens, function ($token) {
-            return $token->isNumber();
+            return $token->isNumber() && is_numeric($token->getText());
         });
 
         if (empty($amount)) {
