@@ -111,7 +111,7 @@ class WebhookController extends Controller
             'method' => 'sendMessage',
             'chat_id' => $request->input('message.chat.id'),
             'reply_to_message_id' => $request->input('message.message_id'),
-            'text' => $transactionType->name . ' ' . $transaction->amount . ', BALANCE NOW: ' . $transaction->balance
+            'text' => view('transaction', compact('transactionType', 'transaction'))->render()
         ]);
     }
 }

@@ -88,7 +88,7 @@ class TelegramWebhookTest extends TestCase
                 'method' => 'sendMessage',
                 'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
                 'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
-                'text' => 'INCOME 38443.00, BALANCE NOW: 38443.00'
+                'text' => 'INCOME: 38443.00' . PHP_EOL . 'BALANCE NOW: 38443.00' . PHP_EOL
             ]);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
@@ -103,7 +103,7 @@ class TelegramWebhookTest extends TestCase
                 'method' => 'sendMessage',
                 'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
                 'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
-                'text' => 'EXPENSE 79.12, BALANCE NOW: 38363.88'
+                'text' => 'EXPENSE: 79.12' . PHP_EOL . 'BALANCE NOW: 38363.88' . PHP_EOL
             ]);
     }
 
