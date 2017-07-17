@@ -246,4 +246,28 @@ class TelegramWebhookTest extends TestCase
             ]
         );
     }
+
+    public function testTelegramWillRespondToStartCommand()
+    {
+        $telegramUpdate = app(TelegramFactory::class)->makeUpdateWithCommand([
+            'message.text' => '🚀/awesome π哈€哈 🚀/start'
+        ]);
+
+        $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->assertStatus(200)
+            ->assertExactJson([
+                'method' => 'sendMessage',
+                'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'text' => view('introduction')->render()
+            ]);
+
+        $this->assertTrue(
+            app(PlatformFactory::class)->getTelegram()->hasUser(
+                array_get($telegramUpdate, 'message.from.id')
+            ),
+            'User should be created'
+        );
+    }
 }

@@ -21,6 +21,13 @@ class TelegramFactory
         return $this->override($update, $override);
     }
 
+    public function makeUpdateWithCommand(array $override = []): array
+    {
+        $update = $this->makeUpdate($override);
+
+        return $this->addCommandEntities($update);
+    }
+
     public function makeMessage(array $override = []): array
     {
         $message = [
@@ -61,5 +68,40 @@ class TelegramFactory
         }
 
         return $base;
+    }
+
+    protected function addCommandEntities(array $update): array
+    {
+        $text = array_get($update, 'message.text');
+
+        $originalInternalEncoding = mb_internal_encoding();
+        $originalRegexEncoding = mb_regex_encoding();
+
+        mb_internal_encoding('UTF-16');
+        mb_regex_encoding('UTF-16');
+
+        mb_ereg_search_init(
+            mb_convert_encoding($text, 'UTF-16', 'UTF-8'),
+            mb_convert_encoding('\/[A-z]+', 'UTF-16', 'UTF-8')
+        );
+
+        while (list($offset, $length) = mb_ereg_search_pos()) {
+            $entities[] = [
+                'type' => 'bot_command',
+                'offset' => $offset / 2,
+                'length' => $length / 2
+            ];
+        }
+
+        mb_internal_encoding($originalInternalEncoding);
+        mb_regex_encoding($originalRegexEncoding);
+
+        if (empty($entities)) {
+            return $update;
+        }
+
+        array_set($update, 'message.entities', $entities);
+
+        return $update;
     }
 }

@@ -66,6 +66,42 @@ class WebhookController extends Controller
             ['platform_user_id' => $platformUserId]
         );
 
+        // check if there is any command in message
+        if ($request->has('message.entities')) {
+            $this->validate($request, [
+                'message.entities.*.type' => 'required',
+                'message.entities.*.offset' => 'required',
+                'message.entities.*.length' => 'required'
+            ]);
+
+            $startCommand = collect($request->input('message.entities'))
+                ->filter(function (array $entity) {
+                    return 'bot_command' === $entity['type'];
+                })
+                ->first(function (array $entity) use ($request) {
+                    return '/start' ===
+                        mb_convert_encoding(
+                            mb_strcut(
+                                mb_convert_encoding($request->input('message.text'), 'UTF-16'),
+                                $entity['offset'] * 2,
+                                $entity['length'] * 2,
+                                'UTF-16'
+                            ),
+                            'UTF-8',
+                            'UTF-16'
+                        );
+                });
+
+            if (!empty($startCommand)) {
+                return response()->json([
+                    'method' => 'sendMessage',
+                    'chat_id' => $request->input('message.chat.id'),
+                    'reply_to_message_id' => $request->input('message.message_id'),
+                    'text' => view('introduction')->render()
+                ]);
+            }
+        }
+
         try {
             /** @var TransactionType $transactionType */
             $transactionType = $transactionTypeGuesser->guess($request->input('message.text'));
