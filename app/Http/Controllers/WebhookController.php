@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Guesser\TagGuesser;
 use App\Guesser\TransactionAmountNotFound;
 use App\Guesser\TransactionTypeNotFound;
 use App\PendingMessage;
@@ -25,7 +26,8 @@ class WebhookController extends Controller
         TransactionTypeGuesser $transactionTypeGuesser,
         TransactionAmountGuesser $transactionAmountGuesser,
         Transaction $transaction,
-        TransactionTypeFactory $transactionTypeFactory
+        TransactionTypeFactory $transactionTypeFactory,
+        TagGuesser $tagGuesser
     ) {
         try {
             $this->validate($request, [
@@ -158,13 +160,26 @@ class WebhookController extends Controller
             'updated_at' => $request->input('message.date')
         ]);
 
+        $tags = $tagGuesser->guess($request->input('message.text'));
+
+        foreach ($tags as $tag) {
+            $transaction->tags()->create(['slug' => $tag]);
+        }
+
+        $tags = implode(
+            ' ',
+            array_map(function ($tag) {
+                return "#$tag";
+            }, $tags)
+        );
+
         $transaction->refresh();
 
         return response()->json([
             'method' => 'sendMessage',
             'chat_id' => $request->input('message.chat.id'),
             'reply_to_message_id' => $request->input('message.message_id'),
-            'text' => view('transaction', compact('transactionType', 'transaction'))->render()
+            'text' => view('transaction', compact('transactionType', 'transaction', 'tags'))->render()
         ]);
     }
 }

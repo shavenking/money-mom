@@ -23,7 +23,7 @@ class IncomeTest extends TestCase
         $telegramFactory = app(TelegramFactory::class);
 
         $telegramUpdate = $telegramFactory->makeUpdate([
-            'message.text' => '38443.12 收入'
+            'message.text' => '38443.12 收入 薪水 Money Mom 年終'
         ]);
 
         $this
@@ -38,16 +38,18 @@ class IncomeTest extends TestCase
         $income = app(TransactionTypeFactory::class)->getIncome();
         $messageDate = app(Carbon::class)->createFromTimestamp(array_get($telegramUpdate, 'message.date'));
 
-        $this->assertDatabaseHas(
-            (new Transaction)->getTable(),
-            [
-                'user_id' => $user->id,
-                'transaction_type_id' => $income->id,
-                'amount' => '38443.12',
-                'balance' => '38443.12',
-                'created_at' => $messageDate,
-                'updated_at' => $messageDate,
-            ]
+        $transaction = Transaction::where([
+            'user_id' => $user->id,
+            'transaction_type_id' => $income->id,
+            'amount' => '38443.12',
+            'balance' => '38443.12',
+            'created_at' => $messageDate,
+            'updated_at' => $messageDate
+        ])->firstOrFail();
+
+        $this->assertSame(
+            2,
+            $transaction->tags()->whereIn('slug', ['薪水', '年終'])->count()
         );
     }
 
