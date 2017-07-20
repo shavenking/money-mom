@@ -8,6 +8,7 @@ use App\Guesser\TransactionTypeNotFound;
 use App\PendingMessage;
 use App\Platform;
 use App\PlatformFactory;
+use App\Tag;
 use App\Transaction;
 use App\Guesser\TransactionAmountGuesser;
 use App\TransactionType;
@@ -160,18 +161,19 @@ class WebhookController extends Controller
             'updated_at' => $request->input('message.date')
         ]);
 
-        $tags = $tagGuesser->guess($request->input('message.text'));
+        $tags = collect($tagGuesser->guess($request->input('message.text')));
 
-        foreach ($tags as $tag) {
-            $transaction->tags()->create(['slug' => $tag]);
-        }
+        $tags = $tags->map(function ($tag) {
+            return Tag::whereSlug($tag)->firstOrCreate([
+                'slug' => $tag
+            ]);
+        });
 
-        $tags = implode(
-            ' ',
-            array_map(function ($tag) {
-                return "#$tag";
-            }, $tags)
-        );
+        $transaction->tags()->sync($tags->pluck('id'));
+
+        $tags = $tags->map(function (Tag $tag) {
+            return "#{$tag->slug}";
+        })->implode(' ');
 
         $transaction->refresh();
 

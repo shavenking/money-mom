@@ -1,4 +1,5 @@
 {{ $transactionType->name }}: {{ $transaction->amount }}
 BALANCE NOW: {{ $transaction->balance }}
-
-{{ $tags }}
+@if (!empty($tags))
+    {{ $tags }}
+@endif
