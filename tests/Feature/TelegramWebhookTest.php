@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\PendingMessage;
 use App\PlatformFactory;
 use App\Transaction;
+use App\TransactionTypeFactory;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Log;
 use Lib\NaturalLanguageProcessor\NaturalLanguageProcessor;
@@ -269,5 +270,67 @@ class TelegramWebhookTest extends TestCase
             ),
             'User should be created'
         );
+    }
+
+    public function testTelegramWillRespondToStatCommand()
+    {
+        $telegramUpdate = app(TelegramFactory::class)->makeUpdateWithCommand([
+            'message.text' => '🚀/awesome π哈€哈 🚀/stat'
+        ]);
+
+        $platformUserId = array_get($telegramUpdate, 'message.from.id');
+
+        $user = app(PlatformFactory::class)->getTelegram()->createIfNotExist(
+            $platformUserId,
+            [
+                'name' => "TG-$platformUserId",
+                'email' => "EMAIL-$platformUserId",
+                'password' => ''
+            ],
+            ['platform_user_id' => $platformUserId]
+        );
+
+        $expense = app(TransactionTypeFactory::class)->getExpense();
+        $income = app(TransactionTypeFactory::class)->getIncome();
+
+        $expense->transactions()->create([
+            'user_id' => $user->id,
+            'amount' => '1.11',
+            'balance' => '0.00',
+            'created_at' => array_get($telegramUpdate, 'message.date'),
+            'updated_at' => array_get($telegramUpdate, 'message.date')
+        ]);
+
+        $income->transactions()->create([
+            'user_id' => $user->id,
+            'amount' => '1.11',
+            'balance' => '1.11',
+            'created_at' => array_get($telegramUpdate, 'message.date'),
+            'updated_at' => array_get($telegramUpdate, 'message.date')
+        ]);
+
+        $income->transactions()->create([
+            'user_id' => $user->id,
+            'amount' => '19.22',
+            'balance' => '20.33',
+            'created_at' => array_get($telegramUpdate, 'message.date'),
+            'updated_at' => array_get($telegramUpdate, 'message.date')
+        ]);
+
+        $respondMessage = <<<'EOD'
+近日平均支出約 1.11
+近日平均收入約 10.17
+
+EOD;
+
+        $this
+            ->postJson('/api/webhooks/telegram/' . env('TELEGRAM_KEY'), $telegramUpdate)
+            ->assertStatus(200)
+            ->assertExactJson([
+                'method' => 'sendMessage',
+                'chat_id' => array_get($telegramUpdate, 'message.chat.id'),
+                'reply_to_message_id' => array_get($telegramUpdate, 'message.message_id'),
+                'text' => $respondMessage
+            ]);
     }
 }

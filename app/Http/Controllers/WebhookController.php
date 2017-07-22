@@ -103,6 +103,39 @@ class WebhookController extends Controller
                     'text' => view('introduction')->render()
                 ]);
             }
+
+            $statCommand = collect($request->input('message.entities'))
+                ->filter(function (array $entity) {
+                    return 'bot_command' === $entity['type'];
+                })
+                ->first(function (array $entity) use ($request) {
+                    return '/stat' ===
+                        mb_convert_encoding(
+                            mb_strcut(
+                                mb_convert_encoding($request->input('message.text'), 'UTF-16'),
+                                $entity['offset'] * 2,
+                                $entity['length'] * 2,
+                                'UTF-16'
+                            ),
+                            'UTF-8',
+                            'UTF-16'
+                        );
+                });
+
+            if (!empty($statCommand)) {
+                $averageExpense = app(TransactionTypeFactory::class)->getExpense()->transactions()->whereUserId($user->id)->avg('amount');
+                $averageIncome = app(TransactionTypeFactory::class)->getIncome()->transactions()->whereUserId($user->id)->avg('amount');
+
+                $averageExpense = number_format($averageExpense, 2);
+                $averageIncome = number_format($averageIncome, 2);
+
+                return response()->json([
+                    'method' => 'sendMessage',
+                    'chat_id' => $request->input('message.chat.id'),
+                    'reply_to_message_id' => $request->input('message.message_id'),
+                    'text' => view('stat', compact('averageIncome', 'averageExpense'))->render()
+                ]);
+            }
         }
 
         try {
